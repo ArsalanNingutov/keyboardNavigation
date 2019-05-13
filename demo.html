@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>键盘导航</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <div id="main" class="wrapper"></div>
+    </main>
+    <script>
+        var hash = init();
+        var key = hash['key'];
+        var site = hash['site'];
+        createKeyboard();
+        listenToKeyboard(site);
+
+        // 初始化
+        function init() {
+            var key = {
+                '0':{0:'q',1:'w',2:'e',3:'r',4:'t',5:'y',6:'u',7:'i',8:'o',9:'p',length:10},
+                '1':{0:'a',1:'s',2:'d',3:'f',4:'g',5:'h',6:'j',7:'k',8:'l',length:9},
+                '2':{0:'z',1:'x',2:'c',3:'v',4:'b',5:'n',6:'m',length:7},
+                'length':3
+            };
+            var site = {
+                'q':'www.qq.com','w':'www.weibo.com','e':'ele.me','r':'reddit.com'
+            };
+
+            // 取出localStorage中site的值
+            var siteLocal = getFromLocalStorage('site');
+            if (siteLocal) {
+                site = siteLocal;
+            }
+
+            return {
+                "key" : key,
+                "site" : site
+            };
+        }
+        function getFromLocalStorage(key) {
+            return JSON.parse(localStorage.getItem(key) || 'null');
+        }
+        // 创建键盘
+        function createKeyboard() {
+            for (var index1 = 0; index1 < key['length']; index1++) {
+                var div = tag('div');
+                main.appendChild(div);
+                var row = key[index1];
+
+                for (var index2 = 0; index2 < row['length']; index2++) {
+                    var kbd = tag('kbd', {className: 'key'});
+                    div.appendChild(kbd);
+                    var span = tag('span', {className: 'text', textContent: row[index2]});
+                    kbd.appendChild(span);
+                    var icon = tag('img');
+                    kbd.appendChild(icon);
+                    var kbds = document.getElementsByTagName('kbd');
+
+                    // icon初始化
+                    for (var i = 0; i < kbds.length; i++) {
+                        // 获取当前按键的id
+                        var kbdId = kbds[i].innerText[0].toLowerCase();
+                        // 获取当前按键的img标签
+                        var icon = kbds[i].childNodes[1];
+                        setIcon(kbdId,icon);
+
+                        listenToMouse(kbds,i);
+                    }
+
+                    // 创建编辑按钮
+                    var editButton = tag('button', {textContent: '编辑', id: row[index2]});
+                    kbd.appendChild(editButton);
+                    // 修改地址
+                    editButton.onclick = function() {
+                        // 获取当前按钮的ID
+                        var key = this.id;
+                        // 获取用户输入值
+                        var target = prompt('请输入您要修改的地址：');
+                        // 将用户输入的地址写入site
+                        site[key] = target;
+                        localStorage.setItem('site', JSON.stringify(site));
+                        // 获取当前按键的img标签
+                        var icon = this.previousSibling;
+                        setIcon(key,icon);
+                    };
+                }
+            }
+        }
+        // 配置icon
+        function setIcon(key,icon) {
+            if (site[key]) {
+                icon.src = "https://" + site[key] + "/favicon.ico";
+            } else {
+                icon.src = "./image/close-circle.png";
+            }
+            icon.onerror = function () {
+                icon.src = './image/close-circle.png';
+            };
+        }
+        // 监听键盘
+        function listenToKeyboard (site) {
+            document.onkeypress = function (ev) {
+                var key = ev['key'];
+                if (site[key]) {
+                    var website = site[key];
+                    window.open('http://' + website, '_blank');
+                } else {
+                    alert('未定义的地址！');
+                }
+            };
+        }
+        // 监听鼠标
+        function listenToMouse (kbds,i) {
+            kbds[i].onclick = function ()  {
+                var key = this.innerText[0].toLowerCase(); // 获取当前按键的id
+                if (site[key]) {
+                    var website = site[key];
+                    window.open('http://' + website, '_blank');
+                } else {
+                    alert('未定义的地址！');
+                }
+            };
+        }
+        // 创建标签
+        function tag(tagName, attributes) {
+            var tag =  document.createElement(tagName);
+            for (var key in attributes) {
+                tag[key] = attributes[key];
+            }
+            return tag;
+        }
+    </script>
+</body>
+</html>
